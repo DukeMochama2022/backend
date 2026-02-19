@@ -2,8 +2,10 @@ import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+const generateToken = (user) => {
+  return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+    expiresIn: "7d",
+  });
 };
 
 const register = async (req, res) => {
@@ -31,7 +33,7 @@ const register = async (req, res) => {
       password: hashedPassword,
     });
 
-    const token = generateToken(user._id);
+    const token = generateToken(user);
     res.cookie("token", token, {
       httpOnly: true,
       secure: false,
@@ -45,6 +47,7 @@ const register = async (req, res) => {
         id: user._id,
         email: user.email,
         username: user.username,
+        role: user.role,
       },
     });
   } catch (error) {
@@ -78,7 +81,7 @@ const login = async (req, res) => {
         .json({ success: false, message: "Invalid credentials" });
     }
 
-    const token = generateToken(user._id);
+    const token = generateToken(user);
     res.cookie("token", token, {
       httpOnly: true,
       secure: false,
