@@ -5,7 +5,7 @@ import {
   getPosts,
   deletePost,
 } from "../controllers/postController.js";
-import protect from "../middleware/authMiddleware.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const postRouter = Router();
 
