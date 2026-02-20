@@ -1,11 +1,11 @@
 import { Router } from "express";
 
-import { register, login, logout } from "../controllers/userController.js";
+import { protect, authorize } from "../middleware/authMiddleware.js";
+import { getProfile } from "../controllers/userController.js";
 
 const userRouter = Router();
 
-userRouter.post("/register", register);
-userRouter.post("/login", login);
-userRouter.post("/logout", logout);
+userRouter.get("/:id", protect, getProfile);
 
-export default userRouter;
+
+export default userRouter

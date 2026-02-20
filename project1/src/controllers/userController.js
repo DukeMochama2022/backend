@@ -1,125 +1,39 @@
 import User from "../models/User.js";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
-
-const generateToken = (user) => {
-  return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
-    expiresIn: "7d",
-  });
-};
-
-const register = async (req, res) => {
+const getProfile = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const userId = req.params.id;
+    const loggedInUser = req.user;
 
-    if (!username || !email || !password) {
-      return res
-        .status(400)
-        .json({ success: false, message: "All fields required!" });
+    if (
+      loggedInUser.role !== "admin" &&
+      loggedInUser._id.toString() !== userId
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied: you can only view your own profile",
+      });
     }
 
-    const existing = await User.findOne({ email });
-    if (existing) {
+    const user = await User.findById(userId).select("-password");
+    if (!user) {
       return res
-        .status(400)
-        .json({ success: false, message: "The user already exists!" });
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    //create a user
-    const user = await User.create({
-      username,
-      email,
-      password: hashedPassword,
-    });
-
-    const token = generateToken(user);
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "strict",
-    });
-
-    return res.status(201).json({
+    res.status(200).json({
       success: true,
-      message: "User created successfully!",
-      user: {
-        id: user._id,
-        email: user.email,
-        username: user.username,
-        role: user.role,
-      },
+      user,
     });
   } catch (error) {
+    console.log(error);
     return res
       .status(500)
       .json({ message: "Internal Server Error", error: error.message });
   }
 };
 
-const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Email and password required" });
-    }
 
-    const user = await User.findOne({ email }).select("+password");
-    if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid Credentials" });
-    }
 
-    //compare the passwords
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid credentials" });
-    }
 
-    const token = generateToken(user);
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "strict",
-    });
-
-    res.status(200).json({
-      success: true,
-      message: "User logged in",
-      user: {
-        id: user._id,
-        email: user.email,
-        username: user.username,
-      },
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, message: "Internal server error" });
-  }
-};
-
-const logout = async (req, res) => {
-  try {
-    res.clearCookie("token", {
-      httpOnly: true,
-      expires: new Date(0),
-      secure: false,
-      sameSite: "strict",
-    });
-
-    res.status(200).json({
-      success: true,
-      message: "User logged out successfully",
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, message: "Internal server error" });
-  }
-};
-
-export { register, login, logout };
+export { getProfile };
