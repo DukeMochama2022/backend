@@ -1,5 +1,6 @@
-import express from "express";
 import dotenv from "dotenv";
+dotenv.config();
+import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import connectDB from "./config/database.js";
@@ -8,12 +9,17 @@ import authRouter from "./routes/authRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import subscriptionRouter from "./routes/subscriptionRoutes.js";
 import errorMiddleware from "./middlewares/errorMiddleware.js";
+import arcjetMiddleware from "./middlewares/arcjetMiddleware.js";
+import workFlowRouter from "./routes/workflowRoutes.js"
 
-dotenv.config();
+console.log("SMTP USER:", process.env.EMAIL_USER);
+console.log("EMAIL PASS:", process.env.EMAIL_PASS);
+
 const app = express();
 
 app.use(express.json());
-app.use(cookieParser())
+app.use(cookieParser());
+//app.use(arcjetMiddleware);
 
 connectDB();
 
@@ -25,6 +31,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 app.use("/api/subscriptions", subscriptionRouter);
+app.use("/api/workflows", workFlowRouter);
 
 app.use(errorMiddleware);
 
