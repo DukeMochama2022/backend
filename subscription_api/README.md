@@ -82,7 +82,7 @@ cd subscription_api
 
 ## 2️⃣ Install dependencies
 
-npm install
+ pnpm install
 
 ---
 
@@ -102,7 +102,7 @@ EMAIL_PASS=your_app_password
 
 # ▶️ Run the Server
 
-npm run dev
+pnpm run dev
 
 or
 
